@@ -126,7 +126,7 @@ want to plot)
 
 Install the latest version from the backtrader2 repository:
 
-  - ``pip install git+https://github.com/backtrader2/backtrader``
+  - ``pip install git+https://github.com/jcoffi/backtrader``
 
 Or install the original version of ``backtrader`` from *pypi*:
 

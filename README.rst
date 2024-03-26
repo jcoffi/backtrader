@@ -1,4 +1,4 @@
-backtrader2 : An on going and open project
+backtrader : An on going and open project
 ==========================================
 
 

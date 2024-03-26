@@ -26,15 +26,8 @@ Backtrader is a flexible and powerful backtesting engine written in python.
 The original project found wide appeal due to its versatility. Over time however,
 the original code base became inaccessible to bug fixes and enhancements.
 
-Backtrader2 is a forked copy of backtrader by the community of users that seeks to make
+This is a forked copy of backtrader by the community of users that seeks to make
 backtrader an ongoing project.
-
-Initially backtrader2 will fix bugs. Just submit an issue and pull requests.
-
-New code ideas are welcome but will not be addressed at this time. But please do enter them as an issue
-and tag it with 'enhancement' so that we can track your idea down the road.
-
-**Backtrader's back and we look forward to its future!**
 
 For feedback/questions/... use the `Community <https://community.backtrader.com>`_
 

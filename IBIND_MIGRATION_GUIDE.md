@@ -13,6 +13,7 @@ This guide covers the migration of Backtrader's IBStore component from the legac
 3. **Better Reliability**: Uses IB's official Web API instead of direct socket connections
 4. **Enhanced Features**: Access to newer IB API features and endpoints
 5. **Improved Error Handling**: Better error reporting and recovery mechanisms
+6. **🚀 HEADLESS OPERATION**: Complete automation without IB Gateway/TWS using OAuth 1.0a
 
 ### What's Preserved
 
@@ -84,6 +85,48 @@ store = ibstore.IBStore(
 data = store.getdata(dataname='AAPL-STK-SMART-USD')
 broker = store.getbroker()
 ```
+
+### 🚀 Headless Setup (No IB Gateway Required!)
+
+For completely automated trading without IB Gateway/TWS:
+
+```python
+# Install with OAuth support
+# pip install ibind[oauth]
+
+import os
+from ibind.oauth.oauth1a import OAuth1aConfig
+
+# Configure OAuth credentials (from IB self-service portal)
+oauth_config = OAuth1aConfig(
+    access_token='your_access_token',
+    access_token_secret='your_access_token_secret',
+    consumer_key='your_consumer_key',
+    encryption_key_fp='/path/to/encryption.pem',
+    signature_key_fp='/path/to/signature.pem',
+    dh_prime='your_dh_prime_hex'
+)
+
+# Create headless store - no IB Gateway needed!
+store = ibstore.IBStore(
+    use_oauth=True,
+    oauth_config=oauth_config,
+    account_id='DU123456',
+    enable_tickler=True,  # Auto-maintain OAuth session
+    enhanced_error_handling=True
+)
+
+# Same API as before - but now fully headless!
+data = store.getdata(dataname='AAPL-STK-SMART-USD')
+broker = store.getbroker()
+```
+
+**Benefits of Headless Operation:**
+- ✅ No IB Gateway/TWS installation required
+- ✅ Perfect for cloud deployments and Docker containers
+- ✅ Fully automated operation with OAuth session maintenance
+- ✅ Direct connection to IB Web API
+- ✅ Same Backtrader API - just add `use_oauth=True`
 
 ## Configuration Changes
 

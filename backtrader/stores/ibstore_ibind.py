@@ -1114,9 +1114,16 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
             
             # Initialize OAuth tickler if enabled
             if self.p.enable_tickler and not self._oauth_tickler:
-                from ibind.support.tickler import Tickler
-                self._oauth_tickler = Tickler(self.rest_client)
-                self._oauth_tickler.start()
+                try:
+                    # Try using the built-in tickler method first
+                    self.rest_client.start_tickler()
+                    self._oauth_tickler = True  # Mark as started
+                    if self.p._debug:
+                        print("OAuth tickler started successfully")
+                except Exception as tickler_error:
+                    if self.p._debug:
+                        print(f"Tickler start failed (non-critical): {tickler_error}")
+                    # Tickler failure is non-critical for OAuth functionality
             
             return True
             
@@ -1147,9 +1154,16 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
                     if symbol in self._symbol_cache:
                         conid = self._symbol_cache[symbol]
                     else:
-                        conid = self.rest_client.stock_conid_by_symbol(symbol)
-                        if self.p.cache_contract_details:
-                            self._symbol_cache[symbol] = conid
+                        try:
+                            conid_result = self.rest_client.stock_conid_by_symbol(symbol)
+                            if conid_result and hasattr(conid_result, 'data') and conid_result.data:
+                                conid = conid_result.data[0] if isinstance(conid_result.data, list) else conid_result.data
+                                if self.p.cache_contract_details:
+                                    self._symbol_cache[symbol] = conid
+                        except Exception as e:
+                            if self.p._debug:
+                                print(f"Symbol resolution failed for {symbol}: {e}")
+                            conid = None
             
             if conid:
                 if symbol:
@@ -1380,9 +1394,20 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
         """Resolve symbol to contract details"""
         try:
             self._initialize_rest_client()
-            # Use ibind to resolve symbol
-            response = self.rest_client.get(f'trsrv/secdef/search?symbol={symbol}')
-            return response
+            # Use ibind's proper method for symbol resolution
+            try:
+                # Try the search_contract_by_symbol method first
+                response = self.rest_client.search_contract_by_symbol(symbol)
+                return response
+            except Exception:
+                # Fallback to stock_conid_by_symbol for stocks
+                try:
+                    response = self.rest_client.stock_conid_by_symbol(symbol)
+                    return response
+                except Exception:
+                    # Final fallback to security_stocks_by_symbol
+                    response = self.rest_client.security_stocks_by_symbol(symbol)
+                    return response
         except Exception as e:
             if self.p._debug:
                 print(f"Symbol resolution failed: {e}")

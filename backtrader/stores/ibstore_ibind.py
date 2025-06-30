@@ -1165,11 +1165,18 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
                                 print(f"Symbol resolution failed for {symbol}: {e}")
                             conid = None
             
+            # Ensure fields is provided - use default fields if None
+            if fields is None:
+                fields = ['31', '84', '86']  # Last price, bid, ask
+            
             if conid:
                 if symbol:
-                    return self.rest_client.live_marketdata_snapshot_by_symbol(symbol, fields=fields)
+                    return self.rest_client.live_marketdata_snapshot_by_symbol(symbol, fields)
                 else:
-                    return self.rest_client.live_marketdata_snapshot(conid, fields=fields)
+                    return self.rest_client.live_marketdata_snapshot(conid, fields)
+            elif symbol:
+                # Try direct symbol lookup even without conid
+                return self.rest_client.live_marketdata_snapshot_by_symbol(symbol, fields)
             
             return None
             

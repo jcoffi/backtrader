@@ -27,6 +27,7 @@ from copy import copy
 from datetime import date, datetime, timedelta
 import inspect
 import itertools
+import os
 import random
 import threading
 import time
@@ -398,14 +399,38 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
         if not self.rest_client:
             try:
                 from ibind import IbkrClient
-                self.rest_client = IbkrClient(
-                    host=self.p.host,
-                    port=str(self.p.port),
-                    account_id=self.p.account_id,
-                    timeout=self.p.timeout,
-                    use_oauth=self.p.use_oauth,
-                    oauth_config=self.p.oauth_config
-                )
+                from ibind.oauth.oauth1a import OAuth1aConfig
+                
+                # Initialize client with OAuth if enabled
+                if self.p.use_oauth:
+                    # Create OAuth config from environment variables or parameters
+                    oauth_config = OAuth1aConfig(
+                        access_token=os.environ.get('IBIND_OAUTH1A_ACCESS_TOKEN'),
+                        access_token_secret=os.environ.get('IBIND_OAUTH1A_ACCESS_TOKEN_SECRET'),
+                        consumer_key=os.environ.get('IBIND_OAUTH1A_CONSUMER_KEY'),
+                        encryption_key_fp=os.environ.get('IBIND_OAUTH1A_ENCRYPTION_KEY_FP'),
+                        signature_key_fp=os.environ.get('IBIND_OAUTH1A_SIGNATURE_KEY_FP'),
+                        dh_prime=os.environ.get('IBIND_OAUTH1A_DH_PRIME')
+                    )
+                    
+                    self.rest_client = IbkrClient(
+                        account_id=self.p.account_id,
+                        timeout=self.p.timeout,
+                        use_oauth=True,
+                        oauth_config=oauth_config
+                    )
+                    
+                    # Initialize OAuth session
+                    self.rest_client.oauth_init(maintain_oauth=True, init_brokerage_session=True)
+                else:
+                    self.rest_client = IbkrClient(
+                        host=self.p.host,
+                        port=str(self.p.port),
+                        account_id=self.p.account_id,
+                        timeout=self.p.timeout,
+                        use_oauth=False
+                    )
+                
                 if self.p._debug:
                     print("REST client initialized")
             except Exception as e:
@@ -436,6 +461,10 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
                 raise
         self.contract_mapper = None
         self.order_mapper = OrderMapper()
+        
+        # WebSocket thread management
+        self._ws_thread = None
+        self._ws_running = False
         
         # WebSocket subscription management
         self.ws_subscriptions = {}  # tickerId -> conid
@@ -491,10 +520,10 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
             pass
 
         # Stop background threads
-        if self._ws_thread and self._ws_thread.is_alive():
+        if hasattr(self, '_ws_thread') and self._ws_thread and self._ws_thread.is_alive():
             self._ws_thread.join(timeout=1.0)
         
-        if self._account_update_thread and self._account_update_thread.is_alive():
+        if hasattr(self, '_account_update_thread') and self._account_update_thread and self._account_update_thread.is_alive():
             self._account_update_thread.join(timeout=1.0)
 
         # Unblock any waiting events
@@ -1334,6 +1363,30 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
         self._symbol_cache.clear()
         if self.p._debug:
             print("Caches cleared")
+    
+    def get_enhanced_account_info(self):
+        """Get enhanced account information"""
+        try:
+            self._initialize_rest_client()
+            # Use ibind to get account info
+            response = self.rest_client.get('portfolio/accounts')
+            return response
+        except Exception as e:
+            if self.p._debug:
+                print(f"Enhanced account info failed: {e}")
+            return None
+    
+    def resolve_symbol(self, symbol):
+        """Resolve symbol to contract details"""
+        try:
+            self._initialize_rest_client()
+            # Use ibind to resolve symbol
+            response = self.rest_client.get(f'trsrv/secdef/search?symbol={symbol}')
+            return response
+        except Exception as e:
+            if self.p._debug:
+                print(f"Symbol resolution failed: {e}")
+            return None
     
     def get_cached_contract_details(self, symbol):
         """

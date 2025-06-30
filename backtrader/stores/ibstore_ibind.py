@@ -818,9 +818,15 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
     def reqHistoricalData(self, contract, enddate, duration, barsize,
                           what=None, useRTH=False, tz='', sessionend=None):
         """Request historical data using ibind REST API"""
-        conid = self.contract_mapper.contract_to_conid(contract)
+        # Get contract symbol
+        symbol = getattr(contract, 'symbol', getattr(contract, 'm_symbol', None))
+        if hasattr(symbol, 'decode'):
+            symbol = symbol.decode('utf-8')
+        
+        conid = self.resolve_symbol_to_conid(symbol) if symbol else None
         if not conid:
-            self.logmsg(f"Could not resolve contract: {contract.m_symbol}")
+            if self.p._debug:
+                print(f"Could not resolve contract: {symbol}")
             return self.getTickerQueue(start=True)
 
         tickerId, q = self.getTickerQueue()
@@ -1431,6 +1437,175 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
             dict: Cached contract details or None
         """
         return self._contract_cache.get(symbol)
+    
+    def getContractDetails(self, contract, maxcount=None):
+        """
+        Get contract details for a given contract (backward compatibility method)
+        
+        Args:
+            contract: Contract object with symbol, sectype, exchange, currency
+            maxcount: Maximum number of contracts to return
+            
+        Returns:
+            list: List of contract details or None if failed
+        """
+        try:
+            self._initialize_rest_client()
+            
+            # Extract contract information
+            symbol = getattr(contract, 'symbol', getattr(contract, 'm_symbol', None))
+            sectype = getattr(contract, 'sectype', getattr(contract, 'm_secType', 'STK'))
+            exchange = getattr(contract, 'exchange', getattr(contract, 'm_exchange', 'SMART'))
+            currency = getattr(contract, 'currency', getattr(contract, 'm_currency', 'USD'))
+            
+            # Convert bytes to string if needed
+            try:
+                if hasattr(symbol, 'decode'):
+                    symbol = symbol.decode('utf-8')
+                if hasattr(sectype, 'decode'):
+                    sectype = sectype.decode('utf-8')
+                if hasattr(exchange, 'decode'):
+                    exchange = exchange.decode('utf-8')
+                if hasattr(currency, 'decode'):
+                    currency = currency.decode('utf-8')
+            except Exception as e:
+                if self.p._debug:
+                    print(f"Error converting bytes to string: {e}")
+            
+            if not symbol:
+                if self.p._debug:
+                    print("No symbol found in contract")
+                return None
+            
+            if self.p._debug:
+                print(f"Getting contract details for: {symbol}, {sectype}, {exchange}, {currency}")
+            
+            # Use ibind to search for contract
+            try:
+                # Try symbol search first
+                result = self.rest_client.search_contract_by_symbol(symbol)
+                if self.p._debug:
+                    print(f"Symbol search result: {result}")
+                
+                if result and hasattr(result, 'data') and result.data:
+                    contracts = result.data
+                    if self.p._debug:
+                        print(f"Found {len(contracts)} contracts")
+                    
+                    # Filter by security type if specified
+                    if sectype:
+                        filtered = []
+                        for c in contracts:
+                            sections = c.get('sections', [])
+                            for section in sections:
+                                if section.get('secType') == sectype:
+                                    filtered.append(c)
+                                    break
+                        contracts = filtered
+                        if self.p._debug:
+                            print(f"After filtering by {sectype}: {len(contracts)} contracts")
+                    
+                    # Apply maxcount limit - take the first/best matches
+                    if maxcount and len(contracts) > maxcount:
+                        if self.p._debug:
+                            print(f"Too many contracts found: {len(contracts)} > {maxcount}, taking first {maxcount}")
+                        contracts = contracts[:maxcount]
+                    
+                    # Convert to contract details format expected by IBData
+                    contract_details = []
+                    for contract_data in contracts:
+                        # Create a mock contract details object
+                        class MockContractDetails:
+                            def __init__(self, data):
+                                self.contractDetails = self
+                                self.m_summary = self
+                                # Map ibind data to expected fields
+                                self.m_symbol = data.get('symbol', symbol)
+                                self.m_secType = sectype
+                                self.m_exchange = exchange
+                                self.m_currency = currency
+                                self.m_conId = int(data.get('conid', 0))
+                                self.m_localSymbol = data.get('symbol', symbol)
+                                self.m_tradingClass = data.get('symbol', symbol)
+                                # Add timezone - default to US/Eastern for US stocks
+                                self.m_timeZoneId = 'US/Eastern'
+                                # Add other common fields
+                                self.m_multiplier = '1'
+                                self.m_minTick = 0.01
+                                self.m_priceMagnifier = 1
+                        
+                        contract_details.append(MockContractDetails(contract_data))
+                    
+                    if self.p._debug:
+                        print(f"Returning {len(contract_details)} contract details")
+                    return contract_details
+                else:
+                    if self.p._debug:
+                        print("No contracts found in search result")
+                    
+            except Exception as e:
+                if self.p._debug:
+                    print(f"Contract details search failed: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            # If we get here, return an empty list instead of None to avoid index errors
+            if self.p._debug:
+                print("Returning empty contract list")
+            return []
+            
+        except Exception as e:
+            if self.p._debug:
+                print(f"getContractDetails failed: {e}")
+            return None
+    
+    def reqHistoricalDataEx(self, contract, enddate, begindate,
+                            timeframe, compression,
+                            what=None, useRTH=False, tz='', sessionend=None,
+                            tickerId=None):
+        """
+        Extended historical data request (backward compatibility method)
+        
+        This is a simplified version that delegates to reqHistoricalData
+        """
+        try:
+            if self.p._debug:
+                print(f"reqHistoricalDataEx called for {getattr(contract, 'symbol', 'unknown')}")
+            
+            # For now, delegate to the regular reqHistoricalData method
+            # In a full implementation, this would handle date ranges and splitting requests
+            return self.reqHistoricalData(
+                contract=contract,
+                enddate=enddate,
+                duration='1 Y',  # Default duration
+                barsize='1 day',  # Default bar size
+                what=what,
+                useRTH=useRTH,
+                tz=tz
+            )
+            
+        except Exception as e:
+            if self.p._debug:
+                print(f"reqHistoricalDataEx failed: {e}")
+            # Return a queue for compatibility
+            return self.getTickerQueue(start=True)
+    
+    def get_account_info(self):
+        """Get account information (backward compatibility method)"""
+        try:
+            self._initialize_rest_client()
+            
+            # Get account summary
+            result = self.rest_client.get_account_summary()
+            if result and hasattr(result, 'data') and result.data:
+                return result.data
+            
+            return None
+            
+        except Exception as e:
+            if self.p._debug:
+                print(f"get_account_info failed: {e}")
+            return None
     
     def resolve_symbol_to_conid(self, symbol):
         """

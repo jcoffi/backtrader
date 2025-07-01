@@ -27,7 +27,7 @@ from backtrader.brokers.iborder_ibind import IBOrder, IBOrderState
 
 def setup_real_oauth_credentials():
     """Set up real OAuth credentials from environment variables"""
-    print("🔐 CHECKING FOR REAL OAUTH CREDENTIALS")
+    print("[SECURITY] CHECKING FOR REAL OAUTH CREDENTIALS")
     print("-" * 50)
     
     # Required OAuth parameters for IBKR
@@ -53,30 +53,30 @@ def setup_real_oauth_credentials():
             else:
                 display_value = value
             found_params[param] = value
-            print(f"✅ {description}: {display_value}")
+            print(f"[PASS] {description}: {display_value}")
         else:
             missing_params.append(param)
-            print(f"❌ {description}: Not found")
+            print(f"[FAIL] {description}: Not found")
     
     if missing_params:
-        print(f"\n⚠️  Missing {len(missing_params)} required parameters")
+        print(f"\n[WARNING]  Missing {len(missing_params)} required parameters")
         print("   To test with real credentials, set these environment variables:")
         for param in missing_params:
             print(f"   export {param}=\"your_value\"")
         return False, {}
     else:
-        print(f"\n✅ All {len(oauth_params)} OAuth parameters found!")
+        print(f"\n[PASS] All {len(oauth_params)} OAuth parameters found!")
         return True, found_params
 
 def test_real_oauth_connection():
     """Test real OAuth connection to IBKR"""
-    print("\n🌐 TESTING REAL OAUTH CONNECTION")
+    print("\n[NETWORK] TESTING REAL OAUTH CONNECTION")
     print("-" * 50)
     
     has_creds, creds = setup_real_oauth_credentials()
     
     if not has_creds:
-        print("❌ Cannot test real connection without credentials")
+        print("[FAIL] Cannot test real connection without credentials")
         return False
     
     try:
@@ -95,56 +95,56 @@ def test_real_oauth_connection():
             _debug=True
         )
         
-        print("✅ OAuth store created with real credentials")
+        print("[PASS] OAuth store created with real credentials")
         
         # Test connection
         broker = store.getbroker()
-        print("✅ Broker created")
+        print("[PASS] Broker created")
         
         # Start connection
         broker.start()
-        print("✅ Connection started")
+        print("[PASS] Connection started")
         
         # Test if connected
         if hasattr(broker, 'connected') and broker.connected():
-            print("✅ Successfully connected to IBKR via OAuth!")
+            print("[PASS] Successfully connected to IBKR via OAuth!")
             
             # Test account information
             try:
                 cash = broker.get_acc_cash()
                 value = broker.get_acc_value()
-                print(f"✅ Account Cash: ${cash:,.2f}")
-                print(f"✅ Account Value: ${value:,.2f}")
+                print(f"[PASS] Account Cash: ${cash:,.2f}")
+                print(f"[PASS] Account Value: ${value:,.2f}")
             except Exception as e:
-                print(f"⚠️  Account info error: {e}")
+                print(f"[WARNING]  Account info error: {e}")
             
             # Test positions
             try:
                 positions = broker.get_positions()
-                print(f"✅ Positions retrieved: {len(positions)} positions")
+                print(f"[PASS] Positions retrieved: {len(positions)} positions")
                 for pos in positions[:3]:  # Show first 3
                     print(f"   - {pos}")
             except Exception as e:
-                print(f"⚠️  Positions error: {e}")
+                print(f"[WARNING]  Positions error: {e}")
             
             return True
         else:
-            print("❌ Connection failed")
+            print("[FAIL] Connection failed")
             return False
             
     except Exception as e:
-        print(f"❌ Real OAuth connection failed: {e}")
+        print(f"[FAIL] Real OAuth connection failed: {e}")
         return False
 
 def test_real_data_feed():
     """Test real data feed with OAuth"""
-    print("\n📊 TESTING REAL DATA FEED")
+    print("\n[RESULTS] TESTING REAL DATA FEED")
     print("-" * 50)
     
     has_creds, creds = setup_real_oauth_credentials()
     
     if not has_creds:
-        print("❌ Cannot test real data feed without credentials")
+        print("[FAIL] Cannot test real data feed without credentials")
         return False
     
     try:
@@ -163,11 +163,11 @@ def test_real_data_feed():
         )
         
         # Test contract search
-        print("🔍 Searching for AAPL contract...")
+        print("[CHECK] Searching for AAPL contract...")
         contract_details = store.getContractDetails('AAPL', 'STK', 'SMART', 'USD')
         
         if contract_details:
-            print(f"✅ Found {len(contract_details)} AAPL contracts")
+            print(f"[PASS] Found {len(contract_details)} AAPL contracts")
             contract = contract_details[0]
             print(f"   - Contract ID: {contract.m_summary.m_conId}")
             print(f"   - Symbol: {contract.m_summary.m_symbol}")
@@ -183,28 +183,28 @@ def test_real_data_feed():
                 todate=datetime.datetime.now()
             )
             
-            print("✅ Real data feed created successfully")
+            print("[PASS] Real data feed created successfully")
             return True
         else:
-            print("❌ No contracts found for AAPL")
+            print("[FAIL] No contracts found for AAPL")
             return False
             
     except Exception as e:
-        print(f"❌ Real data feed test failed: {e}")
+        print(f"[FAIL] Real data feed test failed: {e}")
         return False
 
 def test_real_order_placement():
     """Test real order placement (paper trading recommended)"""
-    print("\n📋 TESTING REAL ORDER PLACEMENT")
+    print("\n[SUMMARY] TESTING REAL ORDER PLACEMENT")
     print("-" * 50)
     
     has_creds, creds = setup_real_oauth_credentials()
     
     if not has_creds:
-        print("❌ Cannot test real orders without credentials")
+        print("[FAIL] Cannot test real orders without credentials")
         return False
     
-    print("⚠️  WARNING: This will attempt to place real orders!")
+    print("[WARNING]  WARNING: This will attempt to place real orders!")
     print("   Make sure you're using a paper trading account")
     
     try:
@@ -234,7 +234,7 @@ def test_real_order_placement():
             m_tif='DAY'
         )
         
-        print("✅ Test order created (1 share, $100 limit)")
+        print("[PASS] Test order created (1 share, $100 limit)")
         
         # Get contract details for AAPL
         contract_details = store.getContractDetails('AAPL', 'STK', 'SMART', 'USD')
@@ -244,27 +244,27 @@ def test_real_order_placement():
             
             # Get next order ID
             order_id = broker.nextOrderId()
-            print(f"✅ Next order ID: {order_id}")
+            print(f"[PASS] Next order ID: {order_id}")
             
             # Convert to ibind format
             ibind_order = order.to_ibind_order(contract.m_summary.m_conId)
-            print(f"✅ Order converted to ibind format: {ibind_order}")
+            print(f"[PASS] Order converted to ibind format: {ibind_order}")
             
-            print("✅ Order placement test completed (order not actually submitted)")
+            print("[PASS] Order placement test completed (order not actually submitted)")
             print("   To submit real orders, implement broker.placeOrder() call")
             
             return True
         else:
-            print("❌ Could not get contract details for order placement")
+            print("[FAIL] Could not get contract details for order placement")
             return False
             
     except Exception as e:
-        print(f"❌ Real order placement test failed: {e}")
+        print(f"[FAIL] Real order placement test failed: {e}")
         return False
 
 def main():
     """Run real OAuth tests"""
-    print("🚀 REAL OAUTH CREDENTIALS TEST")
+    print("[START] REAL OAUTH CREDENTIALS TEST")
     print("=" * 60)
     print("This test will use real IBKR OAuth credentials if provided")
     print("via environment variables. All credentials are handled securely.")
@@ -274,21 +274,21 @@ def main():
     has_creds, _ = setup_real_oauth_credentials()
     
     if not has_creds:
-        print("\n📝 TO USE REAL CREDENTIALS:")
+        print("\n[NOTE] TO USE REAL CREDENTIALS:")
         print("1. Set the required environment variables")
         print("2. Ensure you have valid IBKR OAuth credentials")
         print("3. Use paper trading account for testing")
         print("4. Re-run this test")
-        print("\n🧪 Running structure validation instead...")
+        print("\n[TEST] Running structure validation instead...")
         
         # Run basic structure test
         try:
             store = bt.stores.IBStore(use_oauth=True, account_id='test')
             broker = store.getbroker()
-            print("✅ OAuth structure validation passed")
+            print("[PASS] OAuth structure validation passed")
             return
         except Exception as e:
-            print(f"❌ OAuth structure validation failed: {e}")
+            print(f"[FAIL] OAuth structure validation failed: {e}")
             return
     
     # Run real tests
@@ -301,22 +301,22 @@ def main():
     results = []
     
     for test_name, test_func in tests:
-        print(f"\n🧪 Running {test_name}...")
+        print(f"\n[TEST] Running {test_name}...")
         try:
             result = test_func()
             results.append((test_name, result))
         except Exception as e:
-            print(f"❌ {test_name} failed with exception: {e}")
+            print(f"[FAIL] {test_name} failed with exception: {e}")
             results.append((test_name, False))
     
     # Summary
     print("\n" + "=" * 60)
-    print("📋 REAL OAUTH TEST SUMMARY")
+    print("[SUMMARY] REAL OAUTH TEST SUMMARY")
     print("=" * 60)
     
     passed = 0
     for test_name, result in results:
-        status = "✅ PASSED" if result else "❌ FAILED"
+        status = "[PASS] PASSED" if result else "[FAIL] FAILED"
         print(f"{test_name}: {status}")
         if result:
             passed += 1
@@ -324,15 +324,15 @@ def main():
     print(f"\nOverall: {passed}/{len(results)} tests passed")
     
     if passed == len(results):
-        print("\n🎉 ALL REAL OAUTH TESTS PASSED!")
-        print("\n🔥 LIVE TRADING READY!")
-        print("- ✅ Real OAuth authentication working")
-        print("- ✅ Live IBKR API connection established")
-        print("- ✅ Account data accessible")
-        print("- ✅ Order management functional")
-        print("- ✅ Data feeds operational")
+        print("\n[SUCCESS] ALL REAL OAUTH TESTS PASSED!")
+        print("\n[LIVE] LIVE TRADING READY!")
+        print("- [PASS] Real OAuth authentication working")
+        print("- [PASS] Live IBKR API connection established")
+        print("- [PASS] Account data accessible")
+        print("- [PASS] Order management functional")
+        print("- [PASS] Data feeds operational")
     else:
-        print(f"\n⚠️  {len(results) - passed} tests failed.")
+        print(f"\n[WARNING]  {len(results) - passed} tests failed.")
         print("Check your OAuth credentials and network connection.")
 
 if __name__ == '__main__':

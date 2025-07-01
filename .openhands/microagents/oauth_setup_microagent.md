@@ -72,18 +72,18 @@ python .openhands/microagents/test_oauth_setup.py
 
 Expected output for successful setup:
 ```
-🚀 Starting OAuth Setup Validation
+[START] Starting OAuth Setup Validation
 ==================================================
-Environment Variables............ ✅ PASSED
-Key Files........................ ✅ PASSED
-IBind Import..................... ✅ PASSED
-Backtrader Import................ ✅ PASSED
-OAuth Config..................... ✅ PASSED
-OAuth Store...................... ✅ PASSED
+Environment Variables............ [PASS] PASSED
+Key Files........................ [PASS] PASSED
+IBind Import..................... [PASS] PASSED
+Backtrader Import................ [PASS] PASSED
+OAuth Config..................... [PASS] PASSED
+OAuth Store...................... [PASS] PASSED
 
 Overall: 6/6 tests passed
 
-🎉 ALL TESTS PASSED!
+[SUCCESS] ALL TESTS PASSED!
 Your OAuth setup is ready for live trading!
 ```
 

@@ -82,16 +82,16 @@ def demonstrate_headless_connection():
         oauth_success = store.enable_oauth_authentication()
         
         if oauth_success:
-            print("   ✅ OAuth authentication successful!")
-            print("   ✅ Connected directly to IB Web API")
-            print("   ✅ No IB Gateway/TWS required")
-            print("   ✅ Session tickler started for automatic maintenance")
+            print("   [PASS] OAuth authentication successful!")
+            print("   [PASS] Connected directly to IB Web API")
+            print("   [PASS] No IB Gateway/TWS required")
+            print("   [PASS] Session tickler started for automatic maintenance")
         else:
-            print("   ❌ OAuth authentication failed")
+            print("   [FAIL] OAuth authentication failed")
             print("   (This is expected in demo without real credentials)")
             
     except Exception as e:
-        print(f"   ❌ OAuth error: {e}")
+        print(f"   [FAIL] OAuth error: {e}")
         print("   (This is expected in demo without real credentials)")
     
     print("\n2. Testing headless market data access...")
@@ -100,12 +100,12 @@ def demonstrate_headless_connection():
         snapshot = store.get_market_data_snapshot(symbol='AAPL')
         
         if snapshot:
-            print(f"   ✅ Market data retrieved: {snapshot}")
+            print(f"   [PASS] Market data retrieved: {snapshot}")
         else:
-            print("   ❌ Market data unavailable (expected without real OAuth)")
+            print("   [FAIL] Market data unavailable (expected without real OAuth)")
             
     except Exception as e:
-        print(f"   ❌ Market data error: {e}")
+        print(f"   [FAIL] Market data error: {e}")
     
     print("\n3. Testing headless account information...")
     try:
@@ -113,12 +113,12 @@ def demonstrate_headless_connection():
         performance = store.get_account_performance()
         
         if performance:
-            print(f"   ✅ Account performance: {performance}")
+            print(f"   [PASS] Account performance: {performance}")
         else:
-            print("   ❌ Account data unavailable (expected without real OAuth)")
+            print("   [FAIL] Account data unavailable (expected without real OAuth)")
             
     except Exception as e:
-        print(f"   ❌ Account data error: {e}")
+        print(f"   [FAIL] Account data error: {e}")
     
     store.stop()
 
@@ -133,26 +133,26 @@ def demonstrate_headless_trading_strategy():
         """Example strategy for headless trading"""
         
         def __init__(self):
-            print("   📊 Headless strategy initialized")
+            print("   [RESULTS] Headless strategy initialized")
             self.order = None
         
         def next(self):
             if not self.position and not self.order:
-                print(f"   📈 Current price: {self.data.close[0]}")
+                print(f"   [GROWTH] Current price: {self.data.close[0]}")
                 # Example: Buy signal (in real strategy, use your logic)
-                print("   🛒 Placing buy order...")
+                print("    Placing buy order...")
                 self.order = self.buy(size=100)
         
         def notify_order(self, order):
             if order.status in [order.Completed]:
-                print(f"   ✅ Order completed: {order.executed.size} @ {order.executed.price}")
+                print(f"   [PASS] Order completed: {order.executed.size} @ {order.executed.price}")
             elif order.status in [order.Canceled, order.Margin, order.Rejected]:
-                print(f"   ❌ Order failed: {order.status}")
+                print(f"   [FAIL] Order failed: {order.status}")
             self.order = None
         
         def notify_trade(self, trade):
             if trade.isclosed:
-                print(f"   💰 Trade closed: PnL {trade.pnl:.2f}")
+                print(f"    Trade closed: PnL {trade.pnl:.2f}")
     
     print("1. Setting up headless Cerebro...")
     cerebro = bt.Cerebro()
@@ -191,15 +191,15 @@ def demonstrate_headless_trading_strategy():
     print("5. Running headless strategy...")
     try:
         results = cerebro.run()
-        print("   ✅ Headless strategy completed successfully!")
+        print("   [PASS] Headless strategy completed successfully!")
         
         # In a real scenario with proper OAuth, this would execute trades
-        print("   📊 Strategy would execute trades automatically")
-        print("   🔄 No manual intervention required")
-        print("   ☁️  Perfect for cloud deployment")
+        print("   [RESULTS] Strategy would execute trades automatically")
+        print("   [PROCESS] No manual intervention required")
+        print("   [CLOUD]  Perfect for cloud deployment")
         
     except Exception as e:
-        print(f"   ❌ Strategy execution failed: {e}")
+        print(f"   [FAIL] Strategy execution failed: {e}")
         print("   (Expected without real IB connection)")
     
     store.stop()
@@ -297,7 +297,7 @@ def main():
     print("Headless Operation Summary")
     print("=" * 80)
     
-    print("✅ Key Benefits:")
+    print("[PASS] Key Benefits:")
     print("   • No IB Gateway/TWS required - direct Web API connection")
     print("   • Fully automated operation with OAuth 1.0a authentication")
     print("   • Perfect for cloud deployments and headless servers")
@@ -305,28 +305,28 @@ def main():
     print("   • Enhanced error handling and reconnection")
     print("   • All IBStore features work in headless mode")
     
-    print("\n🔧 Setup Requirements:")
+    print("\n[CONFIG] Setup Requirements:")
     print("   1. Install: pip install ibind[oauth]")
     print("   2. Configure OAuth credentials in IB self-service portal")
     print("   3. Set environment variables or OAuth config")
     print("   4. Enable use_oauth=True in IBStore")
     print("   5. No IB Gateway/TWS installation needed!")
     
-    print("\n🚀 Production Ready:")
+    print("\n[START] Production Ready:")
     print("   • Deploy to any cloud platform")
     print("   • Run in Docker containers")
     print("   • Schedule with cron jobs")
     print("   • Integrate with CI/CD pipelines")
     print("   • Scale horizontally across multiple instances")
     
-    print("\n📚 Next Steps:")
+    print("\n[DOCS] Next Steps:")
     print("   1. Set up OAuth credentials with Interactive Brokers")
     print("   2. Test with paper trading account first")
     print("   3. Configure your trading strategies")
     print("   4. Deploy to your preferred cloud platform")
     print("   5. Monitor and scale as needed")
     
-    print("\n🎉 Headless trading is now possible with IBStore + ibind!")
+    print("\n[SUCCESS] Headless trading is now possible with IBStore + ibind!")
 
 
 if __name__ == '__main__':

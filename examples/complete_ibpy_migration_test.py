@@ -99,7 +99,7 @@ def run_migration_test():
     """
     Run comprehensive migration test
     """
-    print("🚀 COMPLETE IBPY TO IBIND MIGRATION TEST")
+    print("[START] COMPLETE IBPY TO IBIND MIGRATION TEST")
     print("=" * 50)
     
     # Create cerebro instance
@@ -116,7 +116,7 @@ def run_migration_test():
         os.environ['IBIND_OAUTH1A_CONSUMER_KEY'] = 'test_consumer_key'
         
         # Test 1: IBStore Data Feed
-        print("\n📊 TEST 1: IBStore Data Feed (OAuth)")
+        print("\n[RESULTS] TEST 1: IBStore Data Feed (OAuth)")
         print("-" * 30)
         
         # Create IBStore with OAuth (no localhost connection needed)
@@ -139,7 +139,7 @@ def run_migration_test():
         cerebro.adddata(data)
         
         # Test 2: IBBroker Integration
-        print("\n💼 TEST 2: IBBroker Integration (OAuth)")
+        print("\n TEST 2: IBBroker Integration (OAuth)")
         print("-" * 30)
         
         # Set broker
@@ -150,14 +150,14 @@ def run_migration_test():
         cerebro.broker.setcash(100000.0)
         
         # Test 3: Account Information
-        print("\n💰 TEST 3: Account Information")
+        print("\n TEST 3: Account Information")
         print("-" * 30)
         
         print(f"Starting Cash: ${cerebro.broker.getcash():.2f}")
         print(f"Starting Value: ${cerebro.broker.getvalue():.2f}")
         
         # Test 4: Order Management
-        print("\n📋 TEST 4: Order Management")
+        print("\n[SUMMARY] TEST 4: Order Management")
         print("-" * 30)
         
         # Run backtest
@@ -165,27 +165,27 @@ def run_migration_test():
         result = cerebro.run()
         
         # Test 5: Final Account State
-        print("\n📈 TEST 5: Final Account State")
+        print("\n[GROWTH] TEST 5: Final Account State")
         print("-" * 30)
         
         print(f"Final Cash: ${cerebro.broker.getcash():.2f}")
         print(f"Final Value: ${cerebro.broker.getvalue():.2f}")
         
         # Test 6: Position Information
-        print("\n📊 TEST 6: Position Information")
+        print("\n[RESULTS] TEST 6: Position Information")
         print("-" * 30)
         
         for data in cerebro.datas:
             position = cerebro.broker.getposition(data)
             print(f"Position for {data._name}: Size: {position.size}, Price: {position.price:.2f}")
         
-        print("\n✅ MIGRATION TEST COMPLETED SUCCESSFULLY!")
+        print("\n[PASS] MIGRATION TEST COMPLETED SUCCESSFULLY!")
         print("All IBPy dependencies have been replaced with IBind")
         
         return True
         
     except Exception as e:
-        print(f"\n❌ MIGRATION TEST FAILED: {e}")
+        print(f"\n[FAIL] MIGRATION TEST FAILED: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -195,7 +195,7 @@ def test_order_classes():
     """
     Test the new IBOrder classes
     """
-    print("\n🔧 TESTING NEW ORDER CLASSES")
+    print("\n[CONFIG] TESTING NEW ORDER CLASSES")
     print("-" * 30)
     
     try:
@@ -226,11 +226,11 @@ def test_order_classes():
         ibind_order = order.to_ibind_order(conid=265598)  # AAPL conid
         print(f"IBind Order: {ibind_order}")
         
-        print("✅ Order classes test passed!")
+        print("[PASS] Order classes test passed!")
         return True
         
     except Exception as e:
-        print(f"❌ Order classes test failed: {e}")
+        print(f"[FAIL] Order classes test failed: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -240,7 +240,7 @@ def test_store_broker_methods():
     """
     Test the new store and broker methods
     """
-    print("\n🏪 TESTING STORE/BROKER METHODS")
+    print("\n TESTING STORE/BROKER METHODS")
     print("-" * 30)
     
     try:
@@ -262,19 +262,19 @@ def test_store_broker_methods():
         
         for method in methods_to_test:
             if hasattr(store, method):
-                print(f"✅ {method} - Available")
+                print(f"[PASS] {method} - Available")
             else:
-                print(f"❌ {method} - Missing")
+                print(f"[FAIL] {method} - Missing")
         
         # Test broker creation
         broker = store.getbroker()
-        print(f"✅ Broker created: {type(broker)}")
+        print(f"[PASS] Broker created: {type(broker)}")
         
-        print("✅ Store/Broker methods test passed!")
+        print("[PASS] Store/Broker methods test passed!")
         return True
         
     except Exception as e:
-        print(f"❌ Store/Broker methods test failed: {e}")
+        print(f"[FAIL] Store/Broker methods test failed: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -284,43 +284,43 @@ def check_ibpy_removal():
     """
     Verify that all ibpy references have been removed
     """
-    print("\n🧹 CHECKING IBPY REMOVAL")
+    print("\n CHECKING IBPY REMOVAL")
     print("-" * 30)
     
     try:
         # Try to import ibpy - should fail
         try:
             import ib.ext.Order
-            print("❌ ibpy still accessible - migration incomplete")
+            print("[FAIL] ibpy still accessible - migration incomplete")
             return False
         except ImportError:
-            print("✅ ibpy not accessible - good!")
+            print("[PASS] ibpy not accessible - good!")
         
         # Check that our new classes work
         from backtrader.brokers.iborder_ibind import IBOrder
         from backtrader.stores.ibstore import IBStore
         from backtrader.brokers.ibbroker import IBBroker
         
-        print("✅ New ibind-based classes imported successfully")
+        print("[PASS] New ibind-based classes imported successfully")
         
         # Verify no ibpy imports in key files
         import backtrader.brokers.ibbroker as ibbroker_module
         import backtrader.stores.ibstore as ibstore_module
         
-        print("✅ Key modules imported without ibpy dependencies")
+        print("[PASS] Key modules imported without ibpy dependencies")
         
-        print("✅ IBPy removal verification passed!")
+        print("[PASS] IBPy removal verification passed!")
         return True
         
     except Exception as e:
-        print(f"❌ IBPy removal verification failed: {e}")
+        print(f"[FAIL] IBPy removal verification failed: {e}")
         import traceback
         traceback.print_exc()
         return False
 
 
 if __name__ == '__main__':
-    print("🔄 COMPLETE IBPY TO IBIND MIGRATION TEST SUITE")
+    print("[PROCESS] COMPLETE IBPY TO IBIND MIGRATION TEST SUITE")
     print("=" * 60)
     
     # Run all tests
@@ -333,18 +333,18 @@ if __name__ == '__main__':
     
     results = []
     for test_name, test_func in tests:
-        print(f"\n🧪 Running {test_name} Test...")
+        print(f"\n[TEST] Running {test_name} Test...")
         result = test_func()
         results.append((test_name, result))
     
     # Summary
     print("\n" + "=" * 60)
-    print("📋 TEST SUMMARY")
+    print("[SUMMARY] TEST SUMMARY")
     print("=" * 60)
     
     passed = 0
     for test_name, result in results:
-        status = "✅ PASSED" if result else "❌ FAILED"
+        status = "[PASS] PASSED" if result else "[FAIL] FAILED"
         print(f"{test_name}: {status}")
         if result:
             passed += 1
@@ -352,14 +352,14 @@ if __name__ == '__main__':
     print(f"\nOverall: {passed}/{len(tests)} tests passed")
     
     if passed == len(tests):
-        print("\n🎉 ALL TESTS PASSED! MIGRATION COMPLETE!")
+        print("\n[SUCCESS] ALL TESTS PASSED! MIGRATION COMPLETE!")
         print("IBPy has been successfully replaced with IBind across the entire codebase.")
     else:
-        print(f"\n⚠️  {len(tests) - passed} tests failed. Migration needs attention.")
+        print(f"\n[WARNING]  {len(tests) - passed} tests failed. Migration needs attention.")
     
-    print("\n📚 Migration Benefits:")
-    print("- ✅ OAuth 1.0a authentication (more secure)")
-    print("- ✅ Modern Python support (no legacy dependencies)")
-    print("- ✅ Active maintenance and updates")
-    print("- ✅ Better error handling and debugging")
-    print("- ✅ Improved performance and reliability")
+    print("\n[DOCS] Migration Benefits:")
+    print("- [PASS] OAuth 1.0a authentication (more secure)")
+    print("- [PASS] Modern Python support (no legacy dependencies)")
+    print("- [PASS] Active maintenance and updates")
+    print("- [PASS] Better error handling and debugging")
+    print("- [PASS] Improved performance and reliability")

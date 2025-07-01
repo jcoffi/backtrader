@@ -6,28 +6,30 @@ backtrader
    :scale: 100%
    :target: https://pypi.python.org/pypi/backtrader/
 
-..  .. image:: https://img.shields.io/pypi/dm/backtrader.svg
-       :alt: PyPi Monthly Donwloads
-       :scale: 100%
-       :target: https://pypi.python.org/pypi/backtrader/
+.. image:: https://img.shields.io/pypi/dm/backtrader.svg
+   :alt: PyPi Monthly Downloads
+   :scale: 100%
+   :target: https://pypi.python.org/pypi/backtrader/
 
 .. image:: https://img.shields.io/pypi/l/backtrader.svg
    :alt: License
    :scale: 100%
-   :target: https://github.com/backtrader/backtrader/blob/master/LICENSE
-.. image:: https://travis-ci.org/backtrader/backtrader.png?branch=master
-   :alt: Travis-ci Build Status
+   :target: https://github.com/jcoffi/backtrader/blob/main/LICENSE
+
+.. image:: https://github.com/jcoffi/backtrader/workflows/Emoji%20Check/badge.svg
+   :alt: Emoji Check Status
    :scale: 100%
-   :target: https://travis-ci.org/backtrader/backtrader
+   :target: https://github.com/jcoffi/backtrader/actions
+
 .. image:: https://img.shields.io/pypi/pyversions/backtrader.svg
    :alt: Python versions
    :scale: 100%
    :target: https://pypi.python.org/pypi/backtrader/
 
-**Yahoo API Note**:
+**Data Sources Note**:
 
-  [2018-11-16] After some testing it would seem that data downloads can be
-  again relied upon over the web interface (or API ``v7``)
+  Yahoo Finance data feeds are supported but may experience occasional
+  interruptions. Consider using alternative data sources for production trading.
 
 **Tickets**
 
@@ -67,6 +69,12 @@ Features:
 =========
 
 Live Trading and backtesting platform written in Python.
+
+**Code Quality Standards:**
+
+  - Automated emoji detection to ensure clean, professional code
+  - Cross-platform compatibility maintained through strict encoding standards
+  - Continuous integration with GitHub Actions
 
   - Live Data Feed and Trading with
 
@@ -115,10 +123,10 @@ List of built-in Indicators (122)
 
   - `Indicators Reference <http://www.backtrader.com/docu/indautoref.html>`_
 
-Python 2/3 Support
-==================
+Python Support
+==============
 
-  - Python >= ``3.2``
+  - Python >= ``3.8``
 
   - It also works with ``pypy`` and ``pypy3`` (no plotting - ``matplotlib`` is
     not supported under *pypy*)

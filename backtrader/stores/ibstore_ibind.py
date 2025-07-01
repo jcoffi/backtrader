@@ -1194,34 +1194,59 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
                 self._initialize_rest_client()
             
             if symbol and not conid:
-                # Use ibind's symbol resolution
-                if self.p.auto_symbol_resolution:
-                    if symbol in self._symbol_cache:
-                        conid = self._symbol_cache[symbol]
+                # Resolve symbol to conid first
+                conid_result = self.resolve_symbol_to_conid(symbol)
+                if conid_result and hasattr(conid_result, 'data') and conid_result.data:
+                    # Extract conid from the result
+                    if isinstance(conid_result.data, dict):
+                        conid = list(conid_result.data.values())[0]
                     else:
-                        try:
-                            conid_result = self.rest_client.stock_conid_by_symbol(symbol)
-                            if conid_result and hasattr(conid_result, 'data') and conid_result.data:
-                                conid = conid_result.data[0] if isinstance(conid_result.data, list) else conid_result.data
-                                if self.p.cache_contract_details:
-                                    self._symbol_cache[symbol] = conid
-                        except Exception as e:
-                            if self.p._debug:
-                                print(f"Symbol resolution failed for {symbol}: {e}")
-                            conid = None
+                        conid = conid_result.data
             
             # Ensure fields is provided - use default fields if None
             if fields is None:
                 fields = ['31', '84', '86']  # Last price, bid, ask
             
             if conid:
-                if symbol:
-                    return self.rest_client.live_marketdata_snapshot_by_symbol(symbol, fields)
-                else:
-                    return self.rest_client.live_marketdata_snapshot(conid, fields)
-            elif symbol:
-                # Try direct symbol lookup even without conid
-                return self.rest_client.live_marketdata_snapshot_by_symbol(symbol, fields)
+                # Convert conid to string if needed
+                conid_str = str(conid)
+                
+                if self.p._debug:
+                    print(f"Getting live market data for ConID: {conid_str}")
+                
+                # Make initial call to establish subscription
+                result1 = self.rest_client.live_marketdata_snapshot(conids=conid_str, fields=fields)
+                
+                # Wait briefly and make second call to get actual data
+                import time
+                time.sleep(0.5)
+                
+                result2 = self.rest_client.live_marketdata_snapshot(conids=conid_str, fields=fields)
+                
+                if result2 and hasattr(result2, 'data') and result2.data:
+                    # Process the data - it's a list with market data
+                    data_list = result2.data
+                    if isinstance(data_list, list) and len(data_list) > 0:
+                        market_data = data_list[0]  # Get first item
+                        
+                        # Convert field numbers to readable names
+                        readable_data = {}
+                        if '31' in market_data:  # Last price
+                            readable_data['last'] = float(market_data['31'])
+                        if '84' in market_data:  # Bid
+                            readable_data['bid'] = float(market_data['84'])
+                        if '86' in market_data:  # Ask
+                            readable_data['ask'] = float(market_data['86'])
+                        if '_updated' in market_data:  # Timestamp
+                            readable_data['timestamp'] = market_data['_updated']
+                        
+                        if symbol:
+                            return {symbol: readable_data}
+                        else:
+                            return readable_data
+                
+                # Fallback to empty data if no live data available
+                return {symbol: {}} if symbol else {}
             
             return None
             

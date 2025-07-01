@@ -1,10 +1,10 @@
-# 🚀 Complete IBPy to IBind Migration Guide
+# [START] Complete IBPy to IBind Migration Guide
 
 ## Overview
 
 This guide documents the complete migration of Backtrader from the legacy `ibpy` library to the modern `ibind` library. This migration provides better maintainability, OAuth 1.0a authentication, and modern Python support while preserving all existing functionality.
 
-## 📋 Migration Summary
+## [SUMMARY] Migration Summary
 
 ### What Was Migrated
 
@@ -16,13 +16,13 @@ This guide documents the complete migration of Backtrader from the legacy `ibpy`
 
 ### Key Benefits
 
-- ✅ **OAuth 1.0a Authentication**: More secure than legacy authentication
-- ✅ **Modern Python Support**: No legacy dependencies
-- ✅ **Active Maintenance**: ibind is actively maintained
-- ✅ **Better Error Handling**: Improved debugging capabilities
-- ✅ **Enhanced Performance**: More efficient API calls
+- [PASS] **OAuth 1.0a Authentication**: More secure than legacy authentication
+- [PASS] **Modern Python Support**: No legacy dependencies
+- [PASS] **Active Maintenance**: ibind is actively maintained
+- [PASS] **Better Error Handling**: Improved debugging capabilities
+- [PASS] **Enhanced Performance**: More efficient API calls
 
-## 🔧 Technical Changes
+## [CONFIG] Technical Changes
 
 ### 1. IBStore Migration (`backtrader/stores/ibstore_ibind.py`)
 
@@ -92,7 +92,7 @@ pass  # The user may not have ibpy installed
 pass  # The user may not have ibind installed
 ```
 
-## 📦 Installation Requirements
+## [PACKAGE] Installation Requirements
 
 ### Remove Old Dependencies
 ```bash
@@ -104,7 +104,7 @@ pip uninstall ibpy
 pip install "ibind[oauth]"
 ```
 
-## 🔄 Usage Changes
+## [PROCESS] Usage Changes
 
 ### 1. Basic Setup (No Changes Required)
 
@@ -157,7 +157,7 @@ broker.cancelOrder(order_id)
 live_orders = broker.get_live_orders()
 ```
 
-## 🧪 Testing and Validation
+## [TEST] Testing and Validation
 
 ### Run Migration Tests
 
@@ -169,20 +169,20 @@ PYTHONPATH=/path/to/backtrader python examples/complete_ibpy_migration_test.py
 ### Expected Results
 
 ```
-🔄 COMPLETE IBPY TO IBIND MIGRATION TEST SUITE
+[PROCESS] COMPLETE IBPY TO IBIND MIGRATION TEST SUITE
 ============================================================
 
-✅ Order Classes: PASSED
-✅ Store/Broker Methods: PASSED  
-✅ IBPy Removal: PASSED
-❌ Full Migration: FAILED (Expected - requires IB Gateway)
+[PASS] Order Classes: PASSED
+[PASS] Store/Broker Methods: PASSED  
+[PASS] IBPy Removal: PASSED
+[FAIL] Full Migration: FAILED (Expected - requires IB Gateway)
 
 Overall: 3/4 tests passed
 ```
 
 **Note**: The "Full Migration" test fails only because it requires a running IB Gateway. All code structure tests pass.
 
-## 🔍 Troubleshooting
+## [CHECK] Troubleshooting
 
 ### Common Issues
 
@@ -217,7 +217,7 @@ store = bt.stores.IBStore(
 )
 ```
 
-## 📊 Performance Improvements
+## [RESULTS] Performance Improvements
 
 ### Before (ibpy)
 - Legacy Python 2.x compatibility code
@@ -232,7 +232,7 @@ store = bt.stores.IBStore(
 - OAuth 1.0a security
 - Enhanced debugging
 
-## 🔒 Security Enhancements
+## [SECURE] Security Enhancements
 
 ### OAuth 1.0a Authentication
 
@@ -252,7 +252,7 @@ Create `oauth_config.json`:
 - Enhanced security compliance
 - Automatic token refresh
 
-## 🚀 Migration Checklist
+## [START] Migration Checklist
 
 ### Pre-Migration
 - [ ] Backup existing code
@@ -274,7 +274,7 @@ Create `oauth_config.json`:
 - [x] Update documentation
 - [x] Clean up legacy files
 
-## 📁 File Structure Changes
+## [FILES] File Structure Changes
 
 ### New Files Added
 ```
@@ -297,7 +297,7 @@ backtrader/
     └── ibbroker_legacy.py        # Original IBBroker (backup)
 ```
 
-## 🎯 Next Steps
+## [BULLSEYE] Next Steps
 
 ### Immediate Actions
 1. Test with your specific trading strategies
@@ -310,7 +310,7 @@ backtrader/
 3. Enhance error handling
 4. Add more comprehensive logging
 
-## 📞 Support
+## [SUPPORT] Support
 
 ### Resources
 - **ibind Documentation**: [GitHub Repository](https://github.com/Voyz/ibind)
@@ -331,25 +331,25 @@ A: Performance is improved due to modern Python optimizations.
 **Q: Is the migration reversible?**
 A: Yes, legacy files are preserved as backups.
 
-## 🏆 Success Metrics
+## [SUCCESS] Success Metrics
 
 ### Migration Validation
-- ✅ All 27 broker API methods available
-- ✅ Order classes fully functional
-- ✅ Complete ibpy removal verified
-- ✅ Backward compatibility maintained
-- ✅ Enhanced security implemented
-- ✅ Modern Python support enabled
+- [PASS] All 27 broker API methods available
+- [PASS] Order classes fully functional
+- [PASS] Complete ibpy removal verified
+- [PASS] Backward compatibility maintained
+- [PASS] Enhanced security implemented
+- [PASS] Modern Python support enabled
 
 ### Performance Gains
-- 🚀 Faster API response times
-- 🔒 Enhanced security with OAuth
-- 🛠️ Better error handling and debugging
-- 📈 Improved maintainability
-- 🔄 Active library maintenance
+- [START] Faster API response times
+- [SECURE] Enhanced security with OAuth
+- [TOOLS] Better error handling and debugging
+- [GROWTH] Improved maintainability
+- [PROCESS] Active library maintenance
 
 ---
 
-**Migration Complete!** 🎉
+**Migration Complete!** [SUCCESS]
 
 Your Backtrader installation now uses the modern, secure, and actively maintained `ibind` library while preserving all existing functionality and providing enhanced capabilities for live trading.

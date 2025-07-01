@@ -16,7 +16,7 @@ from backtrader.brokers.iborder_ibind import IBOrder, IBOrderState
 
 def test_oauth_store_creation():
     """Test OAuth-based IBStore creation"""
-    print("🔐 TESTING OAUTH STORE CREATION")
+    print("[SECURITY] TESTING OAUTH STORE CREATION")
     print("-" * 40)
     
     # Set up OAuth environment variables
@@ -32,13 +32,13 @@ def test_oauth_store_creation():
             _debug=True
         )
         
-        print("✅ OAuth IBStore created successfully")
+        print("[PASS] OAuth IBStore created successfully")
         print(f"   - OAuth enabled: {store.p.use_oauth}")
         print(f"   - Account ID: {store.p.account_id}")
         
         # Test broker creation
         broker = store.getbroker()
-        print(f"✅ OAuth IBBroker created: {type(broker)}")
+        print(f"[PASS] OAuth IBBroker created: {type(broker)}")
         
         # Test broker methods availability
         methods_to_test = [
@@ -48,19 +48,19 @@ def test_oauth_store_creation():
         
         for method in methods_to_test:
             if hasattr(broker, method):
-                print(f"   ✅ {method} - Available")
+                print(f"   [PASS] {method} - Available")
             else:
-                print(f"   ❌ {method} - Missing")
+                print(f"   [FAIL] {method} - Missing")
         
         return True
         
     except Exception as e:
-        print(f"❌ OAuth store creation failed: {e}")
+        print(f"[FAIL] OAuth store creation failed: {e}")
         return False
 
 def test_oauth_order_classes():
     """Test OAuth-compatible order classes"""
-    print("\n🔧 TESTING OAUTH ORDER CLASSES")
+    print("\n[CONFIG] TESTING OAUTH ORDER CLASSES")
     print("-" * 40)
     
     try:
@@ -70,7 +70,7 @@ def test_oauth_order_classes():
             commission=2.50,
             commissionCurrency='USD'
         )
-        print("✅ IBOrderState created successfully")
+        print("[PASS] IBOrderState created successfully")
         
         # Test IBOrder
         order = IBOrder(
@@ -79,7 +79,7 @@ def test_oauth_order_classes():
             m_orderType='LMT',
             m_lmtPrice=150.0
         )
-        print("✅ IBOrder created successfully")
+        print("[PASS] IBOrder created successfully")
         print(f"   - Action: {order.m_action}")
         print(f"   - Quantity: {order.m_totalQuantity}")
         print(f"   - Order Type: {order.m_orderType}")
@@ -87,18 +87,18 @@ def test_oauth_order_classes():
         
         # Test ibind conversion
         ibind_order = order.to_ibind_order(265598)  # AAPL contract ID
-        print("✅ IBind order conversion successful")
+        print("[PASS] IBind order conversion successful")
         print(f"   - IBind format: {ibind_order}")
         
         return True
         
     except Exception as e:
-        print(f"❌ OAuth order classes test failed: {e}")
+        print(f"[FAIL] OAuth order classes test failed: {e}")
         return False
 
 def test_oauth_compatibility():
     """Test OAuth compatibility with existing Backtrader patterns"""
-    print("\n🔄 TESTING OAUTH COMPATIBILITY")
+    print("\n[PROCESS] TESTING OAUTH COMPATIBILITY")
     print("-" * 40)
     
     try:
@@ -119,23 +119,23 @@ def test_oauth_compatibility():
         # Set broker
         cerebro.setbroker(store.getbroker())
         
-        print("✅ OAuth store integrated with Cerebro")
-        print("✅ OAuth broker set successfully")
+        print("[PASS] OAuth store integrated with Cerebro")
+        print("[PASS] OAuth broker set successfully")
         
         # Test that we can access OAuth-specific features
         broker = cerebro.broker
         if hasattr(broker, 'get_acc_cash'):
-            print("✅ OAuth broker methods accessible")
+            print("[PASS] OAuth broker methods accessible")
         
         return True
         
     except Exception as e:
-        print(f"❌ OAuth compatibility test failed: {e}")
+        print(f"[FAIL] OAuth compatibility test failed: {e}")
         return False
 
 def test_oauth_vs_legacy():
     """Test OAuth vs legacy authentication differences"""
-    print("\n⚖️  TESTING OAUTH VS LEGACY")
+    print("\n  TESTING OAUTH VS LEGACY")
     print("-" * 40)
     
     try:
@@ -152,29 +152,29 @@ def test_oauth_vs_legacy():
             clientId=1
         )
         
-        print("✅ OAuth store created")
-        print("✅ Legacy-style store created (uses OAuth internally)")
+        print("[PASS] OAuth store created")
+        print("[PASS] Legacy-style store created (uses OAuth internally)")
         
         # Both should have the same broker capabilities
         oauth_broker = oauth_store.getbroker()
         legacy_broker = legacy_store.getbroker()
         
-        print(f"✅ OAuth broker type: {type(oauth_broker)}")
-        print(f"✅ Legacy broker type: {type(legacy_broker)}")
+        print(f"[PASS] OAuth broker type: {type(oauth_broker)}")
+        print(f"[PASS] Legacy broker type: {type(legacy_broker)}")
         
         # Both should be the same class (new IBBroker)
         if type(oauth_broker) == type(legacy_broker):
-            print("✅ Both brokers use the same modern implementation")
+            print("[PASS] Both brokers use the same modern implementation")
         
         return True
         
     except Exception as e:
-        print(f"❌ OAuth vs legacy test failed: {e}")
+        print(f"[FAIL] OAuth vs legacy test failed: {e}")
         return False
 
 def main():
     """Run all OAuth migration tests"""
-    print("🚀 OAUTH IBIND MIGRATION TEST SUITE")
+    print("[START] OAUTH IBIND MIGRATION TEST SUITE")
     print("=" * 50)
     
     tests = [
@@ -187,22 +187,22 @@ def main():
     results = []
     
     for test_name, test_func in tests:
-        print(f"\n🧪 Running {test_name}...")
+        print(f"\n[TEST] Running {test_name}...")
         try:
             result = test_func()
             results.append((test_name, result))
         except Exception as e:
-            print(f"❌ {test_name} failed with exception: {e}")
+            print(f"[FAIL] {test_name} failed with exception: {e}")
             results.append((test_name, False))
     
     # Summary
     print("\n" + "=" * 50)
-    print("📋 OAUTH TEST SUMMARY")
+    print("[SUMMARY] OAUTH TEST SUMMARY")
     print("=" * 50)
     
     passed = 0
     for test_name, result in results:
-        status = "✅ PASSED" if result else "❌ FAILED"
+        status = "[PASS] PASSED" if result else "[FAIL] FAILED"
         print(f"{test_name}: {status}")
         if result:
             passed += 1
@@ -210,15 +210,15 @@ def main():
     print(f"\nOverall: {passed}/{len(results)} tests passed")
     
     if passed == len(results):
-        print("\n🎉 ALL OAUTH TESTS PASSED!")
-        print("\n📚 OAuth Migration Benefits:")
-        print("- ✅ Secure OAuth 1.0a authentication")
-        print("- ✅ No localhost dependency")
-        print("- ✅ Modern API access")
-        print("- ✅ Enhanced security")
-        print("- ✅ Cloud-ready architecture")
+        print("\n[SUCCESS] ALL OAUTH TESTS PASSED!")
+        print("\n[DOCS] OAuth Migration Benefits:")
+        print("- [PASS] Secure OAuth 1.0a authentication")
+        print("- [PASS] No localhost dependency")
+        print("- [PASS] Modern API access")
+        print("- [PASS] Enhanced security")
+        print("- [PASS] Cloud-ready architecture")
     else:
-        print(f"\n⚠️  {len(results) - passed} tests failed. OAuth migration needs attention.")
+        print(f"\n[WARNING]  {len(results) - passed} tests failed. OAuth migration needs attention.")
 
 if __name__ == '__main__':
     main()

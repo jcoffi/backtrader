@@ -319,7 +319,7 @@ def demonstrate_backward_compatibility():
     
     store.stop()
     
-    print("\n✅ All original functionality preserved!")
+    print("\n[PASS] All original functionality preserved!")
 
 
 def demonstrate_performance_comparison():
@@ -415,7 +415,7 @@ def main():
     print("Enhanced Features Summary")
     print("=" * 80)
     
-    print("✅ New Features Available:")
+    print("[PASS] New Features Available:")
     print("   • OAuth 1.0a authentication for headless operation")
     print("   • Parallel market data requests with rate limiting")
     print("   • Enhanced order management with auto-confirmations")
@@ -425,13 +425,13 @@ def main():
     print("   • Contract and symbol caching for performance")
     print("   • Enhanced error handling and reporting")
     
-    print("\n✅ Backward Compatibility:")
+    print("\n[PASS] Backward Compatibility:")
     print("   • All original IBStore methods work unchanged")
     print("   • Same data structures and event system")
     print("   • Existing strategies require no code changes")
     print("   • Only port change needed: 7496 → 5000")
     
-    print("\n✅ Configuration Options:")
+    print("\n[PASS] Configuration Options:")
     print("   • use_oauth: Enable OAuth authentication")
     print("   • parallel_requests: Enable parallel data requests")
     print("   • cache_contract_details: Cache for performance")
@@ -439,7 +439,7 @@ def main():
     print("   • websocket_auto_reconnect: Auto-reconnect WebSocket")
     print("   • enable_performance_tracking: Track API metrics")
     
-    print("\n🚀 Ready for production use with enhanced capabilities!")
+    print("\n[START] Ready for production use with enhanced capabilities!")
 
 
 if __name__ == '__main__':

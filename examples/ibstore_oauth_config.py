@@ -60,7 +60,7 @@ def setup_oauth():
     """
     for key, value in OAUTH_CONFIG.items():
         os.environ[key] = value
-    print("✅ OAuth environment variables configured")
+    print("[PASS] OAuth environment variables configured")
 
 def load_credentials_from_files():
     """
@@ -91,15 +91,15 @@ def load_credentials_from_files():
             'IBIND_OAUTH1A_CONSUMER_KEY': consumer_key,
         })
         
-        print("✅ Credentials loaded from files")
+        print("[PASS] Credentials loaded from files")
         return True
         
     except FileNotFoundError as e:
-        print(f"❌ Credential file not found: {e}")
+        print(f"[FAIL] Credential file not found: {e}")
         print("Please ensure your credential files are in the correct location")
         return False
     except Exception as e:
-        print(f"❌ Error loading credentials: {e}")
+        print(f"[FAIL] Error loading credentials: {e}")
         return False
 
 def setup_oauth_from_files():
@@ -136,10 +136,10 @@ def verify_oauth_setup():
             missing_vars.append(var)
     
     if missing_vars:
-        print(f"❌ Missing OAuth environment variables: {missing_vars}")
+        print(f"[FAIL] Missing OAuth environment variables: {missing_vars}")
         return False
     else:
-        print("✅ All OAuth environment variables are set")
+        print("[PASS] All OAuth environment variables are set")
         return True
 
 # =============================================================================

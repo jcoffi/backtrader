@@ -4,7 +4,7 @@
 
 The IBStore component in Backtrader has been successfully migrated from the legacy `ibpy` library to the modern `ibind` library with OAuth 1.0a authentication. This guide will help you migrate your existing code and set up OAuth authentication with Interactive Brokers.
 
-## 🚀 Quick Start
+## [START] Quick Start
 
 ### 1. Install Dependencies
 
@@ -51,7 +51,7 @@ store = ibstore.IBStore(
 )
 ```
 
-## 📋 OAuth Setup with Interactive Brokers
+## [SUMMARY] OAuth Setup with Interactive Brokers
 
 ### Step 1: Generate OAuth Credentials
 
@@ -110,7 +110,7 @@ def setup_oauth():
         os.environ[key] = value
 ```
 
-## 💻 Usage Examples
+## [CODE] Usage Examples
 
 ### Basic Historical Data (Backtesting)
 
@@ -232,7 +232,7 @@ cerebro.addstrategy(LiveTradingStrategy)
 cerebro.run()
 ```
 
-## 🔧 Configuration Options
+## [CONFIG] Configuration Options
 
 ### IBStore Parameters
 
@@ -257,7 +257,7 @@ cerebro.run()
 | `IBIND_OAUTH1A_SIGNATURE_KEY_FP` | Yes | Path to signature key file |
 | `IBIND_OAUTH1A_DH_PRIME` | Yes | Diffie-Hellman prime value |
 
-## 🔒 Security Best Practices
+## [SECURE] Security Best Practices
 
 ### 1. Secure Credential Storage
 
@@ -303,7 +303,7 @@ def load_credentials():
     }
 ```
 
-## 🚨 Migration Checklist
+## [ALERT] Migration Checklist
 
 ### Breaking Changes
 
@@ -328,7 +328,7 @@ def load_credentials():
 - [ ] **Timeframes**: All existing timeframes supported
 - [ ] **Strategies**: No strategy code changes required
 
-## 🐛 Troubleshooting
+## [DEBUG] Troubleshooting
 
 ### Common Issues
 
@@ -395,21 +395,21 @@ store = ibstore.IBStore(
 # Test symbol resolution
 result = store.resolve_symbol_to_conid('AAPL')
 if result and hasattr(result, 'data') and result.data:
-    print("✅ OAuth setup successful!")
+    print("[PASS] OAuth setup successful!")
     print(f"AAPL ConID: {result.data}")
 else:
-    print("❌ OAuth setup failed")
+    print("[FAIL] OAuth setup failed")
 
 store.stop()
 ```
 
-## 📚 Additional Resources
+## [DOCS] Additional Resources
 
 - [Interactive Brokers OAuth Documentation](https://www.interactivebrokers.com/api/doc/oauth.html)
 - [ibind Library Documentation](https://github.com/Voyz/ibind)
 - [Backtrader Documentation](https://www.backtrader.com/docu/)
 
-## 🆘 Support
+## [HELP] Support
 
 If you encounter issues:
 
@@ -419,14 +419,14 @@ If you encounter issues:
 4. **Test with the simple verification script**
 5. **Check IB's API status** and your account permissions
 
-## 🎯 Summary
+## [BULLSEYE] Summary
 
 The IBStore OAuth migration provides:
 
-- ✅ **Enhanced Security**: OAuth 1.0a authentication
-- ✅ **Modern API**: Uses IB's latest REST API
-- ✅ **Better Performance**: Active maintenance and optimization
-- ✅ **Full Compatibility**: Same interface, enhanced functionality
-- ✅ **Future-Proof**: Compatible with IB's roadmap
+- [PASS] **Enhanced Security**: OAuth 1.0a authentication
+- [PASS] **Modern API**: Uses IB's latest REST API
+- [PASS] **Better Performance**: Active maintenance and optimization
+- [PASS] **Full Compatibility**: Same interface, enhanced functionality
+- [PASS] **Future-Proof**: Compatible with IB's roadmap
 
 **Ready for both backtesting and live trading with real Interactive Brokers market data!**

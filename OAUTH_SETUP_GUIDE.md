@@ -6,11 +6,11 @@ This guide explains how to set up OAuth authentication for the migrated IBStore/
 
 ## Benefits of OAuth Authentication
 
-✅ **Enhanced Security**: OAuth 1.0a provides secure authentication without storing passwords  
-✅ **No Local Gateway**: No need to run IB Gateway or TWS locally  
-✅ **Cloud Ready**: Works in cloud environments and containers  
-✅ **Modern API**: Access to IBKR's latest REST API features  
-✅ **Better Performance**: More efficient than legacy socket connections  
+[PASS] **Enhanced Security**: OAuth 1.0a provides secure authentication without storing passwords  
+[PASS] **No Local Gateway**: No need to run IB Gateway or TWS locally  
+[PASS] **Cloud Ready**: Works in cloud environments and containers  
+[PASS] **Modern API**: Access to IBKR's latest REST API features  
+[PASS] **Better Performance**: More efficient than legacy socket connections  
 
 ## Prerequisites
 
@@ -157,9 +157,9 @@ cerebro.run()
 ## Security Best Practices
 
 ### Environment Variables
-- ✅ Always use environment variables for credentials
-- ✅ Never store credentials in code or version control
-- ✅ Use secure methods to set environment variables in production
+- [PASS] Always use environment variables for credentials
+- [PASS] Never store credentials in code or version control
+- [PASS] Use secure methods to set environment variables in production
 
 ### File Permissions
 ```bash

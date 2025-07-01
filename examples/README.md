@@ -124,7 +124,7 @@ if snapshot and 'AAPL' in snapshot:
 
 ## Security Notes
 
-⚠️ **Important Security Considerations:**
+[WARNING] **Important Security Considerations:**
 
 1. **Never commit credentials to version control**
 2. **Use file permissions to protect credential files** (`chmod 600`)
@@ -170,9 +170,9 @@ Use the verification function:
 from ibstore_oauth_config import verify_oauth_setup
 
 if verify_oauth_setup():
-    print("✅ OAuth setup is correct")
+    print("[PASS] OAuth setup is correct")
 else:
-    print("❌ OAuth setup has issues")
+    print("[FAIL] OAuth setup has issues")
 ```
 
 ## Support

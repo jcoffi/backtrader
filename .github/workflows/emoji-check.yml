@@ -1,0 +1,189 @@
+name: Emoji Check
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  emoji-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check for emojis in code
+      id: emoji-check
+      run: |
+        # Create a comprehensive emoji detection script
+        cat > emoji_checker.py << 'EOF'
+        #!/usr/bin/env python3
+        import os
+        import re
+        import sys
+        import unicodedata
+        from pathlib import Path
+        
+        def is_emoji(char):
+            """Check if a character is an emoji"""
+            # Check if character is in emoji ranges
+            code_point = ord(char)
+            
+            # Common emoji ranges
+            emoji_ranges = [
+                (0x1F600, 0x1F64F),  # Emoticons
+                (0x1F300, 0x1F5FF),  # Misc Symbols and Pictographs
+                (0x1F680, 0x1F6FF),  # Transport and Map
+                (0x1F1E0, 0x1F1FF),  # Regional indicators (flags)
+                (0x2600, 0x26FF),    # Misc symbols
+                (0x2700, 0x27BF),    # Dingbats
+                (0xFE00, 0xFE0F),    # Variation Selectors
+                (0x1F900, 0x1F9FF),  # Supplemental Symbols and Pictographs
+                (0x1F018, 0x1F270),  # Various symbols
+                (0x238C, 0x2454),    # Misc symbols
+                (0x20D0, 0x20FF),    # Combining marks for symbols
+            ]
+            
+            for start, end in emoji_ranges:
+                if start <= code_point <= end:
+                    return True
+            
+            # Check Unicode category for symbols and other pictographs
+            category = unicodedata.category(char)
+            if category in ['So', 'Sm'] and code_point > 0x1F000:
+                return True
+                
+            return False
+        
+        def find_emojis_in_text(text):
+            """Find all emojis in text and return their positions"""
+            emojis_found = []
+            for i, char in enumerate(text):
+                if is_emoji(char):
+                    emojis_found.append((i, char, unicodedata.name(char, f'U+{ord(char):04X}')))
+            return emojis_found
+        
+        def check_file_for_emojis(file_path):
+            """Check a single file for emojis"""
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    lines = f.readlines()
+                
+                file_emojis = []
+                for line_num, line in enumerate(lines, 1):
+                    emojis = find_emojis_in_text(line)
+                    for pos, emoji, name in emojis:
+                        file_emojis.append({
+                            'line': line_num,
+                            'column': pos + 1,
+                            'emoji': emoji,
+                            'name': name,
+                            'context': line.strip()
+                        })
+                
+                return file_emojis
+            except Exception as e:
+                print(f"Warning: Could not read {file_path}: {e}")
+                return []
+        
+        def main():
+            # File extensions to check
+            extensions = {'.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.cpp', '.c', '.h', 
+                         '.cs', '.php', '.rb', '.go', '.rs', '.swift', '.kt', '.scala', 
+                         '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
+                         '.html', '.htm', '.xml', '.css', '.scss', '.sass', '.less',
+                         '.json', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf',
+                         '.md', '.rst', '.txt', '.sql', '.r', '.R', '.m', '.pl', '.pm'}
+            
+            # Directories to exclude
+            exclude_dirs = {'.git', '.github', '__pycache__', 'node_modules', '.venv', 
+                           'venv', '.env', 'build', 'dist', '.pytest_cache', '.mypy_cache',
+                           '.tox', 'htmlcov', '.coverage', '.nyc_output', 'coverage'}
+            
+            total_emojis = 0
+            files_with_emojis = []
+            
+            # Walk through all files in the repository
+            for root, dirs, files in os.walk('.'):
+                # Remove excluded directories from dirs list to prevent walking into them
+                dirs[:] = [d for d in dirs if d not in exclude_dirs]
+                
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    file_ext = Path(file).suffix.lower()
+                    
+                    # Skip files that don't match our extensions
+                    if file_ext not in extensions and not file.startswith('.'):
+                        continue
+                    
+                    # Skip hidden files (except specific config files)
+                    if file.startswith('.') and file not in {'.gitignore', '.gitattributes', 
+                                                           '.editorconfig', '.eslintrc', 
+                                                           '.prettierrc', '.pylintrc'}:
+                        continue
+                    
+                    emojis = check_file_for_emojis(file_path)
+                    if emojis:
+                        files_with_emojis.append((file_path, emojis))
+                        total_emojis += len(emojis)
+            
+            if total_emojis > 0:
+                print("EMOJI CHECK FAILED!")
+                print(f"\nFound {total_emojis} emoji(s) in {len(files_with_emojis)} file(s):")
+                print("=" * 80)
+                
+                for file_path, emojis in files_with_emojis:
+                    print(f"\nFile: {file_path}")
+                    print("-" * 40)
+                    
+                    for emoji_info in emojis:
+                        print(f"  Line {emoji_info['line']}, Column {emoji_info['column']}: "
+                              f"'{emoji_info['emoji']}' ({emoji_info['name']})")
+                        print(f"    Context: {emoji_info['context']}")
+                
+                print("\n" + "=" * 80)
+                print("CODE QUALITY VIOLATION:")
+                print("Emojis are not allowed in source code as they can cause:")
+                print("* Encoding issues across different systems")
+                print("* Problems with text editors and IDEs")
+                print("* Inconsistent rendering across platforms")
+                print("* Difficulties in code review and maintenance")
+                print("* Issues with automated tools and parsers")
+                print("\nSOLUTION:")
+                print("Please remove all emojis from your code and use:")
+                print("* Descriptive variable/function names instead")
+                print("* Clear comments in plain text")
+                print("* Standard ASCII characters for symbols")
+                print("* Proper logging messages without emojis")
+                
+                return 1
+            else:
+                print("EMOJI CHECK PASSED!")
+                print("No emojis found in source code.")
+                return 0
+        
+        if __name__ == "__main__":
+            sys.exit(main())
+        EOF
+        
+        # Make the script executable
+        chmod +x emoji_checker.py
+        
+        # Run the emoji checker
+        python3 emoji_checker.py
+        
+        # Store the exit code
+        echo "exit_code=$?" >> $GITHUB_OUTPUT
+        
+    - name: Fail if emojis found
+      if: steps.emoji-check.outputs.exit_code != '0'
+      run: |
+        echo "::error::Emojis detected in source code. Please remove them to maintain code quality standards."
+        exit 1
+        
+    - name: Success message
+      if: steps.emoji-check.outputs.exit_code == '0'
+      run: |
+        echo "::notice::No emojis found in source code. Great job maintaining clean code!"

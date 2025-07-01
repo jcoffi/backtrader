@@ -768,9 +768,15 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
     # Market data methods
     def reqMktData(self, contract, what=None):
         """Request market data using ibind WebSocket"""
-        conid = self.contract_mapper.contract_to_conid(contract)
+        # Get contract symbol
+        symbol = getattr(contract, 'symbol', getattr(contract, 'm_symbol', None))
+        if hasattr(symbol, 'decode'):
+            symbol = symbol.decode('utf-8')
+        
+        conid = self.resolve_symbol_to_conid(symbol) if symbol else None
         if not conid:
-            self.logmsg(f"Could not resolve contract: {contract.m_symbol}")
+            if self.p._debug:
+                print(f"Could not resolve contract: {symbol}")
             return self.getTickerQueue(start=True)
 
         tickerId, q = self.getTickerQueue()
@@ -844,18 +850,51 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
             
             ibind_period = period_map.get(barsize, '1min')
             
-            # Request historical data
+            # Convert duration to ibind format
+            duration_map = {
+                '1 D': '1d',
+                '2 D': '2d', 
+                '3 D': '3d',
+                '5 D': '5d',
+                '1 W': '1w',
+                '2 W': '2w',
+                '1 M': '1m',
+                '2 M': '2m',
+                '3 M': '3m',
+                '6 M': '6m',
+                '1 Y': '1y'
+            }
+            
+            ibind_duration = duration_map.get(duration, duration.lower().replace(' ', ''))
+            
+            # Request historical data using correct method
+            # Extract numeric conid if it's a Result object
+            if hasattr(conid, 'data') and isinstance(conid.data, dict):
+                # conid is a Result object from resolve_symbol_to_conid
+                symbol_key = list(conid.data.keys())[0]
+                actual_conid = str(conid.data[symbol_key])
+            else:
+                actual_conid = str(conid)
+            
+            if self.p._debug:
+                print(f"Requesting historical data: conid={actual_conid}, bar={ibind_period}, period={ibind_duration}")
+            
             result = self.rest_client.marketdata_history_by_conid(
-                conid=conid,
-                period=duration,
+                conid=actual_conid,
                 bar=ibind_period,
-                outside_rth=not useRTH,
-                start_time=enddate
+                period=ibind_duration,
+                outside_rth=not useRTH
             )
             
-            if result.success and result.data:
+            if result and result.data:
+                # Get the data array from the response
+                data_array = result.data.get('data', []) if isinstance(result.data, dict) else result.data
+                
+                if self.p._debug:
+                    print(f"Historical data response: {len(data_array)} bars")
+                
                 # Convert data to ibpy format and put in queue
-                for bar in result.data:
+                for bar in data_array:
                     # Create mock historical data message
                     msg = type('HistoricalData', (), {
                         'reqId': tickerId,

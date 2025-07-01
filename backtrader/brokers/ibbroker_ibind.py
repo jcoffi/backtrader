@@ -101,10 +101,6 @@ class IBBroker(with_metaclass(MetaParams, BrokerBase)):
         # This call cannot block if no answer is available from ib
         self.cash = self.ib.get_acc_cash()
         return self.cash
-    
-    def setcash(self, cash):
-        """Set cash balance"""
-        self.cash = cash
 
     def getvalue(self, datas=None):
         self.value = self.ib.get_acc_value()
@@ -419,35 +415,6 @@ class IBBroker(with_metaclass(MetaParams, BrokerBase)):
                 self.cash = float(msg.value)
             elif msg.key == 'NetLiquidation':
                 self.value = float(msg.value)
-
-    # Additional broker methods for compatibility
-    def connected(self):
-        """Check if broker is connected"""
-        return self.o.connected() if self.o else False
-
-    def get_acc_cash(self):
-        """Get account cash"""
-        return self.o.get_acc_cash() if self.o else 0.0
-
-    def get_acc_value(self):
-        """Get account value"""
-        return self.o.get_acc_value() if self.o else 0.0
-
-    def get_positions(self):
-        """Get account positions"""
-        return self.o.get_positions() if self.o else []
-
-    def placeOrder(self, order_id, contract, order):
-        """Place an order"""
-        return self.o.placeOrder(order_id, contract, order) if self.o else None
-
-    def cancelOrder(self, order_id):
-        """Cancel an order"""
-        return self.o.cancelOrder(order_id) if self.o else None
-
-    def nextOrderId(self):
-        """Get next order ID"""
-        return self.o.nextOrderId() if self.o else 1
 
 
 # For backward compatibility

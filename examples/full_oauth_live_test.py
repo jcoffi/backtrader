@@ -39,19 +39,108 @@ def check_oauth_credentials():
     
     return available_vars, missing_vars
 
+def load_credentials_from_cache():
+    """Load real OAuth credentials from cache directory"""
+    cache_dir = "/workspace/.cache"
+    
+    try:
+        # Check if cache directory exists
+        if not os.path.exists(cache_dir):
+            return None
+            
+        # Read consumer key
+        consumer_key_file = f"{cache_dir}/consumerkey.txt"
+        if os.path.exists(consumer_key_file):
+            with open(consumer_key_file, 'r') as f:
+                consumer_key = f.read().strip()
+        else:
+            return None
+        
+        # Read access token
+        access_token_file = f"{cache_dir}/accesstoken.txt"
+        if os.path.exists(access_token_file):
+            with open(access_token_file, 'r') as f:
+                lines = f.read().strip().split('\n')
+                access_token = lines[0]
+                access_token_secret = lines[1] if len(lines) > 1 else ""
+        else:
+            return None
+        
+        # Read DH prime and convert to hex
+        dh_file = f"{cache_dir}/dhparam.pem"
+        if os.path.exists(dh_file):
+            with open(dh_file, 'r') as f:
+                dh_pem = f.read().strip()
+            
+            # Convert PEM to hex
+            import base64
+            b64_content = dh_pem.replace('-----BEGIN DH PARAMETERS-----', '')
+            b64_content = b64_content.replace('-----END DH PARAMETERS-----', '')
+            b64_content = b64_content.replace('\n', '').strip()
+            decoded = base64.b64decode(b64_content)
+            dh_prime_hex = decoded.hex()
+        else:
+            return None
+        
+        # Key file paths
+        encryption_key_fp = f"{cache_dir}/private_encryption.pem"
+        signature_key_fp = f"{cache_dir}/private_signature.pem"
+        
+        if not os.path.exists(encryption_key_fp) or not os.path.exists(signature_key_fp):
+            return None
+        
+        return {
+            'consumer_key': consumer_key,
+            'access_token': access_token,
+            'access_token_secret': access_token_secret,
+            'dh_prime': dh_prime_hex,
+            'encryption_key_fp': encryption_key_fp,
+            'signature_key_fp': signature_key_fp
+        }
+        
+    except Exception as e:
+        print(f"⚠️  Error loading cache credentials: {e}")
+        return None
+
 def setup_oauth_environment():
     """Set up OAuth environment variables for testing"""
     print("🔐 SETTING UP OAUTH ENVIRONMENT")
     print("-" * 40)
     
+    # First try to load from cache
+    cache_creds = load_credentials_from_cache()
+    
+    if cache_creds:
+        print("✅ Found real OAuth credentials in cache:")
+        print(f"   - Consumer Key: {cache_creds['consumer_key']}")
+        print(f"   - Access Token: {cache_creds['access_token'][:20]}...")
+        print(f"   - Access Token Secret: {cache_creds['access_token_secret'][:20]}...")
+        print(f"   - DH Prime: {len(cache_creds['dh_prime'])} hex characters")
+        print(f"   - Encryption Key: {cache_creds['encryption_key_fp']}")
+        print(f"   - Signature Key: {cache_creds['signature_key_fp']}")
+        
+        # Set up ibind environment variables
+        os.environ['IBIND_OAUTH1A_ACCESS_TOKEN'] = cache_creds['access_token']
+        os.environ['IBIND_OAUTH1A_ACCESS_TOKEN_SECRET'] = cache_creds['access_token_secret']
+        os.environ['IBIND_OAUTH1A_CONSUMER_KEY'] = cache_creds['consumer_key']
+        os.environ['IBIND_OAUTH1A_DH_PRIME'] = cache_creds['dh_prime']
+        os.environ['IBIND_OAUTH1A_ENCRYPTION_KEY_FP'] = cache_creds['encryption_key_fp']
+        os.environ['IBIND_OAUTH1A_SIGNATURE_KEY_FP'] = cache_creds['signature_key_fp']
+        
+        print("✅ Real credentials configured for ibind")
+        return True  # Indicates real credentials available
+    
+    # Fallback to environment variables
     available, missing = check_oauth_credentials()
     
     if available:
-        print("✅ Found OAuth credentials:")
+        print("✅ Found OAuth credentials in environment:")
         for var, masked_value in available.items():
             print(f"   - {var}: {masked_value}")
+        return True
     
     if missing:
+        print("⚠️  No OAuth credentials found in cache or environment")
         print("⚠️  Missing OAuth credentials:")
         for var in missing:
             print(f"   - {var}")
@@ -87,9 +176,11 @@ def test_oauth_store_creation():
                 os.environ[key] = value
         
         # Create OAuth-enabled store
+        # Use a more realistic account ID format
+        account_id = os.environ.get('IBKR_ACCOUNT_ID', 'DU123456')
         store = bt.stores.IBStore(
             use_oauth=True,
-            account_id=os.environ.get('IBKR_ACCOUNT_ID', 'test_account'),
+            account_id=account_id,
             _debug=True
         )
         

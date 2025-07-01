@@ -185,7 +185,7 @@ class MetaSingleton(MetaParams):
 
 
 class VCStore(with_metaclass(MetaSingleton, object)):
-    '''Singleton class wrapping an ibpy ibConnection instance.
+    '''Singleton class wrapping a Visual Chart connection instance.
 
     The parameters can also be specified in the classes which use this store,
     like ``VCData`` and ``VCBroker``

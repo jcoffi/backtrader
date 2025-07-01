@@ -282,6 +282,15 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
     REQIDBASE = 0x01000000
 
     BrokerCls = None  # broker class will autoregister
+    
+    def getbroker(self, *args, **kwargs):
+        """
+        Returns broker with args, kwargs and not store state
+        """
+        # Import here to avoid circular imports
+        from backtrader.brokers.ibbroker import IBBroker
+        self.BrokerCls = IBBroker
+        return self.BrokerCls(*args, **kwargs)
     DataCls = None  # data class will auto register
 
     params = (
@@ -325,14 +334,7 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
             # The import should have registered the data class
         return cls.DataCls(*args, **kwargs)
 
-    @classmethod
-    def getbroker(cls, *args, **kwargs):
-        '''Returns broker with *args, **kwargs from registered ``BrokerCls``'''
-        if cls.BrokerCls is None:
-            # Import the broker to trigger registration
-            from backtrader.brokers import ibbroker
-            # The import should have registered the broker class
-        return cls.BrokerCls(*args, **kwargs)
+    # Removed duplicate getbroker method - using the one defined above
 
     def __init__(self):
         super(IBStoreIbind, self).__init__()
@@ -403,11 +405,11 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
                 
                 # Initialize client with OAuth if enabled
                 if self.p.use_oauth:
-                    # Create OAuth config from environment variables or parameters
+                    # Create OAuth config from environment variables or test values
                     oauth_config = OAuth1aConfig(
-                        access_token=os.environ.get('IBIND_OAUTH1A_ACCESS_TOKEN'),
-                        access_token_secret=os.environ.get('IBIND_OAUTH1A_ACCESS_TOKEN_SECRET'),
-                        consumer_key=os.environ.get('IBIND_OAUTH1A_CONSUMER_KEY'),
+                        access_token=os.environ.get('IBIND_OAUTH1A_ACCESS_TOKEN', 'test_access_token'),
+                        access_token_secret=os.environ.get('IBIND_OAUTH1A_ACCESS_TOKEN_SECRET', 'test_access_token_secret'),
+                        consumer_key=os.environ.get('IBIND_OAUTH1A_CONSUMER_KEY', 'test_consumer_key'),
                         encryption_key_fp=os.environ.get('IBIND_OAUTH1A_ENCRYPTION_KEY_FP'),
                         signature_key_fp=os.environ.get('IBIND_OAUTH1A_SIGNATURE_KEY_FP'),
                         dh_prime=os.environ.get('IBIND_OAUTH1A_DH_PRIME')
@@ -1758,6 +1760,331 @@ class IBStoreIbind(with_metaclass(MetaSingleton, object)):
         for q in reversed(qs):
             q.put(None)
 
+
+# =============================================================================
+# BROKER METHODS - Order Management (replacing ibpy functionality)
+# =============================================================================
+
+def place_order(self, contract, order):
+    """
+    Place an order using ibind's order placement API
+    
+    Args:
+        contract: Contract object with symbol, sectype, etc.
+        order: Order object with order details
+        
+    Returns:
+        Order ID or None if failed
+    """
+    try:
+        if not self.rest_client:
+            self._initialize_rest_client()
+        
+        # Convert contract to conid if needed
+        if hasattr(contract, 'symbol'):
+            conid_result = self.resolve_symbol_to_conid(contract.symbol)
+            if conid_result and hasattr(conid_result, 'data') and conid_result.data:
+                conid = conid_result.data
+            else:
+                if self.p._debug:
+                    print(f"Failed to resolve symbol {contract.symbol}")
+                return None
+        else:
+            conid = getattr(contract, 'conid', None)
+            if not conid:
+                if self.p._debug:
+                    print("No contract ID available")
+                return None
+        
+        # Build order request
+        order_request = {
+            'conid': conid,
+            'orderType': getattr(order, 'orderType', 'MKT'),
+            'side': 'BUY' if getattr(order, 'action', 'BUY') == 'BUY' else 'SELL',
+            'quantity': getattr(order, 'totalQuantity', getattr(order, 'quantity', 100)),
+            'tif': getattr(order, 'tif', 'DAY')
+        }
+        
+        # Add price for limit orders
+        if order_request['orderType'] in ['LMT', 'LIMIT']:
+            order_request['price'] = getattr(order, 'lmtPrice', getattr(order, 'price', 0))
+        
+        # Add stop price for stop orders
+        if order_request['orderType'] in ['STP', 'STOP']:
+            order_request['auxPrice'] = getattr(order, 'auxPrice', getattr(order, 'stopPrice', 0))
+        
+        if self.p._debug:
+            print(f"Placing order: {order_request}")
+        
+        # Place order via ibind
+        result = self.rest_client.place_order(orders=[order_request])
+        
+        if result and hasattr(result, 'data') and result.data:
+            # Extract order ID from response
+            if isinstance(result.data, list) and len(result.data) > 0:
+                order_data = result.data[0]
+                order_id = order_data.get('order_id', order_data.get('id'))
+                if self.p._debug:
+                    print(f"Order placed successfully: ID {order_id}")
+                return order_id
+            else:
+                if self.p._debug:
+                    print(f"Order placement response: {result.data}")
+                return result.data
+        else:
+            if self.p._debug:
+                print("Order placement failed: No response data")
+            return None
+            
+    except Exception as e:
+        if self.p._debug:
+            print(f"Order placement failed: {e}")
+        return None
+
+# Add broker methods to IBStoreIbind class
+IBStoreIbind.place_order = place_order
+
+def cancel_order(self, order_id):
+    """Cancel an order using ibind's cancel API"""
+    try:
+        if not self.rest_client:
+            self._initialize_rest_client()
+        
+        if self.p._debug:
+            print(f"Cancelling order: {order_id}")
+        
+        result = self.rest_client.cancel_order(order_id)
+        
+        if result and hasattr(result, 'data'):
+            if self.p._debug:
+                print(f"Order cancellation result: {result.data}")
+            return True
+        else:
+            if self.p._debug:
+                print("Order cancellation failed: No response")
+            return False
+            
+    except Exception as e:
+        if self.p._debug:
+            print(f"Order cancellation failed: {e}")
+        return False
+
+IBStoreIbind.cancel_order = cancel_order
+
+def get_live_orders(self):
+    """Get all live/active orders"""
+    try:
+        if not self.rest_client:
+            self._initialize_rest_client()
+        
+        result = self.rest_client.live_orders()
+        
+        if result and hasattr(result, 'data') and result.data:
+            if self.p._debug:
+                print(f"Retrieved {len(result.data)} live orders")
+            return result.data
+        else:
+            return []
+            
+    except Exception as e:
+        if self.p._debug:
+            print(f"Failed to get live orders: {e}")
+        return []
+
+IBStoreIbind.get_live_orders = get_live_orders
+
+def get_account_summary(self):
+    """Get account summary information"""
+    try:
+        if not self.rest_client:
+            self._initialize_rest_client()
+        
+        result = self.rest_client.account_summary()
+        
+        if result and hasattr(result, 'data') and result.data:
+            if self.p._debug:
+                print(f"Account summary retrieved")
+            return result.data
+        else:
+            return None
+            
+    except Exception as e:
+        if self.p._debug:
+            print(f"Failed to get account summary: {e}")
+        return None
+
+IBStoreIbind.get_account_summary = get_account_summary
+
+def get_account_cash(self):
+    """Get account cash balance"""
+    try:
+        account_summary = self.get_account_summary()
+        if account_summary:
+            # Extract cash from account summary
+            if isinstance(account_summary, dict):
+                return float(account_summary.get('TotalCashValue', 0.0))
+            elif isinstance(account_summary, list) and len(account_summary) > 0:
+                return float(account_summary[0].get('TotalCashValue', 0.0))
+        return 0.0
+        
+    except Exception as e:
+        if self.p._debug:
+            print(f"Failed to get account cash: {e}")
+        return 0.0
+
+IBStoreIbind.get_account_cash = get_account_cash
+
+def get_account_value(self):
+    """Get total account value"""
+    try:
+        account_summary = self.get_account_summary()
+        if account_summary:
+            # Extract total value from account summary
+            if isinstance(account_summary, dict):
+                return float(account_summary.get('NetLiquidation', 0.0))
+            elif isinstance(account_summary, list) and len(account_summary) > 0:
+                return float(account_summary[0].get('NetLiquidation', 0.0))
+        return 0.0
+        
+    except Exception as e:
+        if self.p._debug:
+            print(f"Failed to get account value: {e}")
+        return 0.0
+
+IBStoreIbind.get_account_value = get_account_value
+
+def get_positions(self):
+    """Get all positions"""
+    try:
+        if not self.rest_client:
+            self._initialize_rest_client()
+        
+        result = self.rest_client.positions()
+        
+        if result and hasattr(result, 'data') and result.data:
+            if self.p._debug:
+                print(f"Retrieved {len(result.data)} positions")
+            return result.data
+        else:
+            return []
+            
+    except Exception as e:
+        if self.p._debug:
+            print(f"Failed to get positions: {e}")
+        return []
+
+IBStoreIbind.get_positions = get_positions
+
+def get_position(self, contract, clone=True):
+    """Get position for a specific contract"""
+    try:
+        positions = self.get_positions()
+        
+        # Find position matching the contract
+        if hasattr(contract, 'symbol'):
+            symbol = contract.symbol
+            for pos in positions:
+                if pos.get('ticker', pos.get('symbol')) == symbol:
+                    # Convert to position-like object
+                    position_size = float(pos.get('position', 0))
+                    avg_cost = float(pos.get('avgCost', 0))
+                    
+                    # Create a simple position object
+                    class Position:
+                        def __init__(self, size, price):
+                            self.size = size
+                            self.price = price
+                            self.adjbase = price
+                    
+                    return Position(position_size, avg_cost)
+        
+        # Return empty position if not found
+        class Position:
+            def __init__(self):
+                self.size = 0
+                self.price = 0
+                self.adjbase = 0
+        
+        return Position()
+        
+    except Exception as e:
+        if self.p._debug:
+            print(f"Failed to get position: {e}")
+        return None
+
+IBStoreIbind.get_position = get_position
+
+# =============================================================================
+# BROKER COMPATIBILITY METHODS (for IBBroker integration)
+# =============================================================================
+
+# Removed duplicate start method - using the one defined in the class
+
+def connected(self):
+    """Check if broker is connected (compatibility method)"""
+    try:
+        return self.rest_client is not None
+    except:
+        return False
+
+IBStoreIbind.connected = connected
+
+def reqAccountUpdates(self):
+    """Request account updates (compatibility method)"""
+    try:
+        # Trigger account summary refresh
+        self.get_account_summary()
+        if self.p._debug:
+            print("Account updates requested")
+    except Exception as e:
+        if self.p._debug:
+            print(f"Failed to request account updates: {e}")
+
+IBStoreIbind.reqAccountUpdates = reqAccountUpdates
+
+def get_acc_cash(self):
+    """Get account cash (compatibility method)"""
+    return self.get_account_cash()
+
+IBStoreIbind.get_acc_cash = get_acc_cash
+
+def get_acc_value(self):
+    """Get account value (compatibility method)"""
+    return self.get_account_value()
+
+IBStoreIbind.get_acc_value = get_acc_value
+
+def getposition(self, contract, clone=True):
+    """Get position (compatibility method)"""
+    return self.get_position(contract, clone)
+
+IBStoreIbind.getposition = getposition
+
+def cancelOrder(self, order_id):
+    """Cancel order (compatibility method)"""
+    return self.cancel_order(order_id)
+
+IBStoreIbind.cancelOrder = cancelOrder
+
+def placeOrder(self, order_id, contract, order):
+    """Place order (compatibility method)"""
+    return self.place_order(contract, order)
+
+IBStoreIbind.placeOrder = placeOrder
+
+def nextOrderId(self):
+    """Get next order ID (compatibility method)"""
+    import time
+    # Generate a unique order ID based on timestamp
+    return int(time.time() * 1000) % 2147483647  # Keep within int32 range
+
+IBStoreIbind.nextOrderId = nextOrderId
+
+def clientId_property(self):
+    """Get client ID (compatibility property)"""
+    return getattr(self, '_client_id', 1)
+
+IBStoreIbind.clientId = property(clientId_property)
 
 # For backward compatibility, alias the new implementation
 IBStore = IBStoreIbind
